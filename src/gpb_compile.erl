@@ -122,6 +122,7 @@
                boolean_opt(descriptor) |
                boolean_opt(maps) |
                boolean_opt(msgs_as_maps) |
+               boolean_opt(oneof_as_tuples) |
                boolean_opt(mapfields_as_maps) |
                boolean_opt(defs_as_maps) |
                {maps_unset_optional, omitted | present_undefined} |
@@ -2130,6 +2131,9 @@ opt_specs() ->
      {"maps_key_type", {atom, binary}, maps_key_type,
       "atom | binary\n"
       "       Specifies the key type for maps.\n"},
+     {"oneof-as-tuples", undefined, oneof_as_tuples, "\n"
+      "        Specifies if oneof fields are tuples or not.\n"
+      "        Otherwise, they will be the value directly. Default is true.\n"},
      {"msgs-as-maps", undefined, msgs_as_maps, "\n"
       "        Specifies that messages should be maps.\n"
       "        Otherwise, they will be records.\n"},
