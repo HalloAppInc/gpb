@@ -450,7 +450,10 @@ oneof_type_strs(MsgName,
                   #maps{oneof=flat} ->
                       fun(_Tag, TypeStr) -> TypeStr end;
                   _ ->
-                      fun(Tag, TypeStr) -> ?f("{~p, ~s}", [Tag, TypeStr]) end
+                      case gpb_lib:get_oneof_as_tuples_by_opts(Opts) of
+                          true -> fun(Tag, TypeStr) -> ?f("{~p, ~s}", [Tag, TypeStr]) end;
+                          false -> fun(_Tag, TypeStr) -> TypeStr end
+                      end
               end,
     ElemPath = [MsgName, FName],
     case gpb_gen_translators:has_type_spec_translation(ElemPath, AnRes) of

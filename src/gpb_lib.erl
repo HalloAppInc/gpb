@@ -75,6 +75,7 @@
 
 -export([get_2tuples_or_maps_for_maptype_fields_by_opts/1]).
 -export([get_records_or_maps_by_opts/1]).
+-export([get_oneof_as_tuples_by_opts/1]).
 -export([get_mapping_and_unset_by_opts/1]).
 -export([get_strings_as_binaries_by_opts/1]).
 -export([get_type_specs_by_opts/1]).
@@ -600,6 +601,10 @@ get_records_or_maps_by_opts(Opts) ->
         false -> records;
         true  -> maps
     end.
+
+get_oneof_as_tuples_by_opts(Opts) ->
+    Default = true,
+    proplists:get_value(oneof_as_tuples, Opts, Default).
 
 get_mapping_and_unset_by_opts(Opts) ->
     case get_records_or_maps_by_opts(Opts) of
