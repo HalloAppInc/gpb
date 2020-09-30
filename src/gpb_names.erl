@@ -358,7 +358,7 @@ mk_renamings(RenameOps, Defs, Opts) ->
     MsgTypeRenamings = msg_type_renamings(MsgRenamings, GroupRenamings,
                                           RenameOps),
     EnumTypeRenamings = enum_type_renamings(EnumRenamings, RenameOps),
-    EnumFieldRenamings = enum_field_renamings(PkgByProto, PkgRenamings, Defs, RenameOps),
+    EnumFieldRenamings = enum_field_renamings(PkgByProto, Defs, RenameOps),
     case check_no_dups(MostRenamings, RpcRenamings) of
         ok ->
             InversePkgRenamings = invert_renaming(PkgRenamings),
@@ -486,7 +486,7 @@ enum_renamings(PkgByProto, PkgRenamings, Defs, RenameOps) ->
          end
          || {{enum_containment, Proto}, EnumNames} <- Defs])).
 
-enum_field_renamings(PkgByProto, _PkgRenamings, Defs, RenameOps) ->
+enum_field_renamings(PkgByProto, Defs, RenameOps) ->
     dict:from_list(
       lists:append(
         [begin
@@ -677,7 +677,7 @@ do_rename(RF, Defs) ->
          ({{group,Name}, Fields}) ->
               {{group, RF(group, Name)}, rename_fields(RF, Fields, Defs)};
          ({{enum, Name}, Enumerators}) ->
-              {{enum, RF(enum, Name)}, rename_enumerators(RF, Enumerators)};
+              {{enum, RF(enum, Name)}, rename_enum_fields(RF, Enumerators)};
          ({{extensions,Name}, Exts}) ->
               {{extensions, RF(msg, Name)}, Exts};
          ({{service,Name}, Rpcs}) ->
@@ -723,7 +723,7 @@ rename_fields(RF, Fields, Defs) ->
       end,
       Fields).
 
-rename_enumerators(RF, Enumerators) ->
+rename_enum_fields(RF, Enumerators) ->
     lists:map(
         fun({FieldName, Value}) ->
             {RF(enum_fields, FieldName), Value}
