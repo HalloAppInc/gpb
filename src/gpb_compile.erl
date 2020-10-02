@@ -189,7 +189,8 @@
                     {service_fqname, name_change()} |
                     {rpc_name, name_change()} |
                     {msg_typename, name_change()} |
-                    {enum_typename, name_change()}.
+                    {enum_typename, name_change()} |
+                    {enum_fieldname, name_change()}.
 
 -type name_change() :: {prefix, string() | atom()} |
                        {suffix, string() | atom()} |
@@ -2087,6 +2088,7 @@ opt_specs() ->
       "         rpc_name       The RPC name.\n"
       "         msg_typename   Erlang type names for messages and groups.\n"
       "         enum_typename  Erlang type names for enums.\n"
+      "         enum_fieldname Erlang field names for enums.\n"
       "       How:\n"
       "          prefix=Prefix        Prepend the Prefix.\n"
       "          suffix=Suffix        Append the Suffix.\n"
@@ -2275,6 +2277,7 @@ opt_rename_what(S) ->
         "rpc_name:"++S2       -> {rpc_name, S2};
         "msg_typename:"++S2   -> {msg_typename, S2};
         "enum_typename:"++S2  -> {enum_typename, S2};
+        "enum_fieldname:"++S2 -> {enum_fieldname, S2};
         _ -> throw({badopt, "Invalid thing to rename: "++S})
     end.
 

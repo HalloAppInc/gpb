@@ -282,7 +282,8 @@ mk_rename_op(service_fqname, How) -> mk_service_rename_op(How);
 mk_rename_op(service_name, How) -> mk_service_rename_op(How);
 mk_rename_op(rpc_name, How) -> mk_rpc_rename_op(How);
 mk_rename_op(msg_typename, How) -> mk_msgtype_rename_op(How);
-mk_rename_op(enum_typename, How) -> mk_enumtype_rename_op(How).
+mk_rename_op(enum_typename, How) -> mk_enumtype_rename_op(How);
+mk_rename_op(enum_fieldname, How) -> mk_enumfield_rename_op(How).
 
 mk_pkg_rename_op(PrimOp) ->
     fun(Name, _Proto) -> do_prim_op(PrimOp, Name) end.
@@ -309,6 +310,9 @@ mk_msgtype_rename_op(PrimOp) ->
     fun(Name, _Proto) -> do_prim_op(PrimOp, Name) end.
 
 mk_enumtype_rename_op(PrimOp) ->
+    fun(Name, _Proto) -> do_prim_op(PrimOp, Name) end.
+
+mk_enumfield_rename_op(PrimOp) ->
     fun(Name, _Proto) -> do_prim_op(PrimOp, Name) end.
 
 do_prim_op({prefix, Prefix}, Name) ->
@@ -354,6 +358,7 @@ mk_renamings(RenameOps, Defs, Opts) ->
     MsgTypeRenamings = msg_type_renamings(MsgRenamings, GroupRenamings,
                                           RenameOps),
     EnumTypeRenamings = enum_type_renamings(EnumRenamings, RenameOps),
+    EnumFieldRenamings = enum_field_renamings(PkgByProto, Defs, RenameOps),
     case check_no_dups(MostRenamings, RpcRenamings) of
         ok ->
             InversePkgRenamings = invert_renaming(PkgRenamings),
@@ -370,7 +375,8 @@ mk_renamings(RenameOps, Defs, Opts) ->
                             {services, ServiceRenamings},
                             {rpcs, RpcRenamings},
                             {msg_types, MsgTypeRenamings},
-                            {enum_types, EnumTypeRenamings}],
+                            {enum_types, EnumTypeRenamings},
+                            {enum_fields, EnumFieldRenamings}],
                             %% Reverse renamings:
                            [{inverse_pkgs, InversePkgRenamings}
                             || UsePackages],
@@ -389,6 +395,7 @@ mk_renamer(Renamings) ->
     EnumRenamings = key1fetch(enums, Renamings),
     ServiceRenamings = key1fetch(services, Renamings),
     RpcRenamings = key1fetch(rpcs, Renamings),
+    EnumFieldRenamings = key1fetch(enum_fields, Renamings),
     fun(package, Name) ->
             if PkgRenamings /= undefined ->
                     dict_fetch(Name, PkgRenamings);
@@ -405,6 +412,8 @@ mk_renamer(Renamings) ->
             dict_fetch(Name, EnumRenamings);
        (service, Name) ->
             dict_fetch(Name, ServiceRenamings);
+       (enum_fields, Name) ->
+            dict_fetch(Name, EnumFieldRenamings);
        ({rpc, ServiceName}, RpcName) ->
             dict_fetch({ServiceName, RpcName}, RpcRenamings)
     end.
@@ -476,6 +485,18 @@ enum_renamings(PkgByProto, PkgRenamings, Defs, RenameOps) ->
               || FqName <- EnumNames]
          end
          || {{enum_containment, Proto}, EnumNames} <- Defs])).
+
+enum_field_renamings(PkgByProto, Defs, RenameOps) ->
+    dict:from_list(
+      lists:append(
+        [begin
+             [begin
+              NewFieldName = run_ops(enum_fieldname, FieldName, Proto, RenameOps),
+              {FieldName, NewFieldName}
+              end
+              || {FieldName, _Value} <- EnumFields]
+         end
+         || {{enum, Proto}, EnumFields} <- Defs])).
 
 calc_enum_name_renaming(FqName, Pkg, PkgRenamings, Proto, RenameOps) ->
     Name = drop_prefix(Pkg, FqName),
@@ -656,7 +677,7 @@ do_rename(RF, Defs) ->
          ({{group,Name}, Fields}) ->
               {{group, RF(group, Name)}, rename_fields(RF, Fields, Defs)};
          ({{enum, Name}, Enumerators}) ->
-              {{enum, RF(enum, Name)}, Enumerators};
+              {{enum, RF(enum, Name)}, rename_enum_fields(RF, Enumerators)};
          ({{extensions,Name}, Exts}) ->
               {{extensions, RF(msg, Name)}, Exts};
          ({{service,Name}, Rpcs}) ->
@@ -701,6 +722,12 @@ rename_fields(RF, Fields, Defs) ->
               F
       end,
       Fields).
+
+rename_enum_fields(RF, Enumerators) ->
+    lists:map(
+        fun({FieldName, Value}) ->
+            {RF(enum_fields, FieldName), Value}
+        end, Enumerators).
 
 rename_rpcs(RF, ServiceName, RPCs) ->
     lists:map(
