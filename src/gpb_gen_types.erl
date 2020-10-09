@@ -84,20 +84,11 @@ format_hrl_export_types(Defs, AnRes, Opts) ->
               ["%% enumerated types\n",
                gpb_lib:nl_join([format_enum_typespec(Enum, Enumeration, AnRes)
                                 || {{enum, Enum}, Enumeration} <- Defs]),
-               "\n",
-               ?f("-export_type([~s]).",
-                  [gpb_lib:comma_join(["'"++atom_to_list(Enum)++"'/0"
-                                       || {{enum, Enum}, _} <- Defs])]),
                "\n\n",
                "%% message types\n",
                gpb_lib:nl_join(
                  [format_record_typespec(Name, Fields, Defs, AnRes, Opts)
                   || {_, Name, Fields} <- gpb_lib:msgs_or_groups(Defs)]),
-               "\n",
-               ?f("-export_type([~s]).",
-                  [gpb_lib:comma_join(
-                     ["'"++atom_to_list(Name)++"'/0"
-                      || {_, Name, _} <- gpb_lib:msgs_or_groups(Defs)])]),
                "\n"])
     end.
 
