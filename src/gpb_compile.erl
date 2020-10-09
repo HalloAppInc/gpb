@@ -115,6 +115,7 @@
 
 -type opts() :: [opt()].
 -type opt() :: type_specs | {type_specs, boolean()} |
+               {type_specs_hrl, boolean()} |
                {verify, optionally | always | never} |
                {copy_bytes, true | false | auto | integer() | float()} |
                {strings_as_binaries, boolean()} | strings_as_binaries |
@@ -2110,6 +2111,8 @@ opt_specs() ->
      {"il", undefined, include_as_lib, "\n"
       "       Generate code that includes gpb.hrl using -include_lib\n"
       "       instead of -include, which is the default.\n"},
+     {"type_specs_hrl", undefined, type_specs_hrl, "\n"
+     "        Exports definitions to hrl file."},
      {"type", undefined, type_specs, "\n"
       "       Enables `::Type()' annotations in the generated code.\n"},
      {"no_type", fun opt_x_false/2, type_specs, "\n"
@@ -3078,6 +3081,8 @@ format_hrl(Mod, Defs, AnRes, Opts1) ->
        gpb_lib:nl_join(
          [gpb_gen_types:format_msg_record(Msg, Fields, AnRes, Opts, Defs)
           || {_,Msg,Fields} <- gpb_lib:msgs_or_groups(Defs)]),
+       "\n",
+       gpb_gen_types:format_hrl_export_types(Defs, AnRes, Opts1),
        "\n",
        ?f("-endif.~n")],
       Opts).

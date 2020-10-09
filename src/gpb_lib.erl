@@ -79,6 +79,7 @@
 -export([get_mapping_and_unset_by_opts/1]).
 -export([get_strings_as_binaries_by_opts/1]).
 -export([get_type_specs_by_opts/1]).
+-export([get_type_specs_hrl_by_opts/1]).
 -export([get_gen_descriptor_by_opts/1]).
 -export([get_field_format_by_opts/1]).
 -export([mk_get_defs_as_maps_or_records_fn/1]).
@@ -624,6 +625,10 @@ get_strings_as_binaries_by_opts(Opts) ->
 get_type_specs_by_opts(Opts) ->
     Default = true,
     proplists:get_value(type_specs, Opts, Default).
+
+get_type_specs_hrl_by_opts(Opts) ->
+    Default = false,
+    proplists:get_value(type_specs_hrl, Opts, Default).
 
 get_gen_descriptor_by_opts(Opts) ->
     proplists:get_bool(descriptor, Opts).

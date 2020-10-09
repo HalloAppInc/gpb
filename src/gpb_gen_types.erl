@@ -26,6 +26,7 @@
 -export([format_enum_typespec/3]).
 -export([format_record_typespec/5]).
 -export([format_export_types/3]).
+-export([format_hrl_export_types/3]).
 
 -include("../include/gpb.hrl").
 -include("gpb_compile.hrl").
@@ -50,6 +51,32 @@ format_maps_as_msgs_record_defs(MapsAsMsgs) ->
 
 format_export_types(Defs, AnRes, Opts) ->
     case gpb_lib:get_type_specs_by_opts(Opts) of
+        false ->
+            "";
+        true ->
+            iolist_to_binary(
+              ["%% enumerated types\n",
+               gpb_lib:nl_join([format_enum_typespec(Enum, Enumeration, AnRes)
+                                || {{enum, Enum}, Enumeration} <- Defs]),
+               "\n",
+               ?f("-export_type([~s]).",
+                  [gpb_lib:comma_join(["'"++atom_to_list(Enum)++"'/0"
+                                       || {{enum, Enum}, _} <- Defs])]),
+               "\n\n",
+               "%% message types\n",
+               gpb_lib:nl_join(
+                 [format_record_typespec(Name, Fields, Defs, AnRes, Opts)
+                  || {_, Name, Fields} <- gpb_lib:msgs_or_groups(Defs)]),
+               "\n",
+               ?f("-export_type([~s]).",
+                  [gpb_lib:comma_join(
+                     ["'"++atom_to_list(Name)++"'/0"
+                      || {_, Name, _} <- gpb_lib:msgs_or_groups(Defs)])]),
+               "\n"])
+    end.
+
+format_hrl_export_types(Defs, AnRes, Opts) ->
+    case gpb_lib:get_type_specs_hrl_by_opts(Opts) of
         false ->
             "";
         true ->
