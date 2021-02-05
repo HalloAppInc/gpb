@@ -97,6 +97,7 @@
 -export([current_otp_release/0]).
 -export([proto2_type_default/3]).
 -export([proto3_type_default/3]).
+-export([proto3_type_default/4]).
 -export([get_maps_key_type_by_opts/1]).
 -export([json_by_opts/1]).
 -export([json_object_format_by_opts/1]).
@@ -755,6 +756,15 @@ proto2_type_default(Type, Defs, Opts) ->
 
 proto3_type_default(Type, Defs, Opts) ->
     type_default(Type, Defs, Opts, fun gpb:proto3_type_default/2).
+
+proto3_type_default(Type, Defs, Opts, Fopts) ->
+    type_default(Type, Defs, Opts, Fopts, fun gpb:proto3_type_default/2).
+
+type_default(Type, Defs, Opts, Fopts, GetTypeDefault) ->
+    IsEbin = proplists:get_bool(ebin, Fopts),
+    if IsEbin -> GetTypeDefault(bytes, Defs);
+       true -> type_default(Type, Defs, Opts, GetTypeDefault)
+    end.
 
 type_default(Type, Defs, Opts, GetTypeDefault) ->
     if Type == string ->
