@@ -206,7 +206,8 @@ format_hfields(MsgName, Indent, Fields, AnRes, Opts, Defs) ->
                                                 gpb_lib:proto3_type_default(
                                                   Type,
                                                   Defs,
-                                                  Opts),
+                                                  Opts,
+                                                  FOpts),
                                             ?f(" = ~p", [Default]);
                                         _ -> ""
                                     end;
@@ -400,7 +401,7 @@ flatten_oneof_ftcs([]) ->
     [].
 
 field_type_str(MsgName,
-               #?gpb_field{name=FName, type=Type, occurrence=Occurrence},
+               #?gpb_field{name=FName, type=Type, occurrence=Occurrence, opts = FieldOpts},
                Defs, AnRes, Opts) ->
     OrUndefined = case gpb_lib:get_mapping_and_unset_by_opts(Opts) of
                       records ->
@@ -423,7 +424,7 @@ field_type_str(MsgName,
                 defaulty -> TypeStr ++ OrUndefined
             end;
         false ->
-            TypeStr = type_to_typestr_2(Type, Defs, AnRes, Opts),
+            TypeStr = type_to_typestr_2(Type, Defs, AnRes, Opts, FieldOpts),
             case Occurrence of
                 required ->
                     TypeStr ++ OrUndefined;
@@ -492,6 +493,16 @@ oneof_type_strs(MsgName,
              || #?gpb_field{name=Name, type=Type} <- OFields]
                 ++ OrUndefinedElems
     end.
+
+
+type_to_typestr_2(int64, Defs, AnRes, Opts, FieldOpts) ->
+    case proplists:get_bool(ebin, FieldOpts) of
+        false -> type_to_typestr_2(int64, Defs, AnRes, Opts);
+        true  -> "binary()"
+    end;
+type_to_typestr_2(Type, Defs, AnRes, Opts, _FieldOpts) ->
+    type_to_typestr_2(Type, Defs, AnRes, Opts).
+
 
 type_to_typestr_2(sint32, _Defs, _AnRes, _Opts)   -> "integer()";
 type_to_typestr_2(sint64, _Defs, _AnRes, _Opts)   -> "integer()";
